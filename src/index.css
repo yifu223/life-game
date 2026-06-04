@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* ── Base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  background: #0d0500;
+}
+
+/* Pixel hand cursor for all elements */
+* {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='22'%3E%3Crect x='5' y='0' width='3' height='1' fill='%231a0800'/%3E%3Crect x='4' y='1' width='1' height='13' fill='%231a0800'/%3E%3Crect x='5' y='1' width='3' height='13' fill='%23f5e6c0'/%3E%3Crect x='8' y='1' width='1' height='13' fill='%231a0800'/%3E%3Crect x='2' y='5' width='2' height='1' fill='%231a0800'/%3E%3Crect x='1' y='6' width='1' height='8' fill='%231a0800'/%3E%3Crect x='2' y='6' width='2' height='8' fill='%23f5e6c0'/%3E%3Crect x='9' y='7' width='2' height='1' fill='%231a0800'/%3E%3Crect x='11' y='8' width='1' height='6' fill='%231a0800'/%3E%3Crect x='9' y='8' width='2' height='6' fill='%23f5e6c0'/%3E%3Crect x='0' y='13' width='1' height='7' fill='%231a0800'/%3E%3Crect x='1' y='14' width='11' height='6' fill='%23f5e6c0'/%3E%3Crect x='12' y='14' width='1' height='6' fill='%231a0800'/%3E%3Crect x='1' y='20' width='11' height='1' fill='%231a0800'/%3E%3C/svg%3E") 5 0, default;
+}
+
+button, a, [role="button"], select, textarea, input {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='22'%3E%3Crect x='5' y='0' width='3' height='1' fill='%231a0800'/%3E%3Crect x='4' y='1' width='1' height='13' fill='%231a0800'/%3E%3Crect x='5' y='1' width='3' height='13' fill='%23f5e6c0'/%3E%3Crect x='8' y='1' width='1' height='13' fill='%231a0800'/%3E%3Crect x='2' y='5' width='2' height='1' fill='%231a0800'/%3E%3Crect x='1' y='6' width='1' height='8' fill='%231a0800'/%3E%3Crect x='2' y='6' width='2' height='8' fill='%23f5e6c0'/%3E%3Crect x='9' y='7' width='2' height='1' fill='%231a0800'/%3E%3Crect x='11' y='8' width='1' height='6' fill='%231a0800'/%3E%3Crect x='9' y='8' width='2' height='6' fill='%23f5e6c0'/%3E%3Crect x='0' y='13' width='1' height='7' fill='%231a0800'/%3E%3Crect x='1' y='14' width='11' height='6' fill='%23f5e6c0'/%3E%3Crect x='12' y='14' width='1' height='6' fill='%231a0800'/%3E%3Crect x='1' y='20' width='11' height='1' fill='%231a0800'/%3E%3C/svg%3E") 5 0, pointer;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1a0800; }
+::-webkit-scrollbar-thumb { background: #6b3d0f; border: 1px solid #3d1e00; }
+::-webkit-scrollbar-thumb:hover { background: #8b5213; }
+
+/* Pixel rendering for icons */
+img { image-rendering: pixelated; }
+
+/* Textarea focus */
+textarea:focus, input:focus { outline: none; }
