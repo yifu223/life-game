@@ -791,6 +791,26 @@ const QUEST_STAGES = [
   { id: 4, title: '输出可复用获客方案',     rewardDesc: '所有技能 +2', rewards: { analysis: 2, execution: 2, ai: 2, communication: 2, creativity: 2, life: 2 }, titleUnlock: 'AI产品经理候补生' },
 ]
 
+const STAGE_SUBTASKS = {
+  0: [
+    '搜索关键词找5-8个竞品账号（粉丝1万+、近30天有更新、中高端定位）',
+    '用表格记录：账号名/粉丝数/内容类型/人设/爆款特征/是否投流/留资方式',
+    '找规律：爆款内容长什么样、哪种人设容易获客、评论区问什么',
+    '对照自家账号找差距',
+    '输出竞品研究文档给老板',
+  ],
+}
+
+function loadSubtaskState() {
+  try {
+    const raw = localStorage.getItem('xhm-subtask-state')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {}
+}
+
+function saveSubtaskState(s) { localStorage.setItem('xhm-subtask-state', JSON.stringify(s)) }
+
 const RANDOM_EVENT_POOL = [
   { id: 'walk',   text: '去天府绿道散步？',           canReject: true,  accept: { attrs: { happiness: 2, energy: 1 } },                                        desc: '心情+2，精力+1' },
   { id: 'food',   text: '吃顿好的螺蛳粉？',           canReject: true,  accept: { attrs: { happiness: 3 } },                                                   desc: '心情+3' },
@@ -867,8 +887,10 @@ function RewardModal({ stage, onClose }) {
 }
 
 function TasksPage({ data, onUpdate }) {
-  const [questState, setQuestState] = useState(loadQuestState)
-  const [modal, setModal]           = useState(null)
+  const [questState, setQuestState]     = useState(loadQuestState)
+  const [modal, setModal]               = useState(null)
+  const [subtaskState, setSubtaskState] = useState(loadSubtaskState)
+  const [expandedStage, setExpandedStage] = useState(null)
 
   const today          = new Date().toISOString().slice(0, 10)
   const todayEventIds  = pickTodayEventIds()
@@ -881,6 +903,13 @@ function TasksPage({ data, onUpdate }) {
   const allDone         = currentStageIdx === -1
 
   function pushQuestState(next) { setQuestState(next); saveQuestState(next) }
+
+  function toggleSubtask(stageIdx, taskIdx) {
+    const prev = subtaskState[stageIdx] || {}
+    const next = { ...subtaskState, [stageIdx]: { ...prev, [taskIdx]: !prev[taskIdx] } }
+    setSubtaskState(next)
+    saveSubtaskState(next)
+  }
 
   function handleCompleteStage(idx) {
     const stage = QUEST_STAGES[idx]
@@ -952,25 +981,121 @@ function TasksPage({ data, onUpdate }) {
           })}
 
           {!allDone && (() => {
-            const s = QUEST_STAGES[currentStageIdx]
+            const s         = QUEST_STAGES[currentStageIdx]
+            const subtasks  = STAGE_SUBTASKS[currentStageIdx] || []
+            const checked   = subtaskState[currentStageIdx] || {}
+            const doneCount = subtasks.filter((_, i) => checked[i]).length
+            const allChecked = subtasks.length > 0 && doneCount === subtasks.length
+            const isExpanded = expandedStage === currentStageIdx
             return (
-              <div style={{ ...W.card, padding: '10px 14px', marginBottom: 6, border: '2px solid #a06020', boxShadow: '0 0 0 1px #e8a830' }}>
-                <div style={{ color: '#7a4a10', fontSize: 11, marginBottom: 4 }}>进行中 · 阶段 {currentStageIdx + 1}/{QUEST_STAGES.length}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: '#3d1a00', fontWeight: 700, fontSize: 13 }}>{s.title}</div>
-                    <div style={{ color: '#7a4a10', fontSize: 11, marginTop: 4 }}>奖励：{s.rewardDesc}</div>
+              <div style={{ marginBottom: 6 }}>
+                {/* 主卡片 */}
+                <div style={{ ...W.card, padding: '10px 14px', border: '2px solid #a06020', boxShadow: '0 0 0 1px #e8a830' }}>
+                  <div style={{ color: '#7a4a10', fontSize: 11, marginBottom: 4 }}>进行中 · 阶段 {currentStageIdx + 1}/{QUEST_STAGES.length}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#3d1a00', fontWeight: 700, fontSize: 13 }}>{s.title}</div>
+                      <div style={{ color: '#7a4a10', fontSize: 11, marginTop: 4 }}>奖励：{s.rewardDesc}</div>
+                    </div>
+                    <button onClick={() => handleCompleteStage(currentStageIdx)} style={{
+                      padding: '8px 16px', fontWeight: 700, fontSize: 12, flexShrink: 0,
+                      background: allChecked
+                        ? 'linear-gradient(180deg,#ffe060 0%,#d4a800 100%)'
+                        : 'linear-gradient(180deg,#d4aa6a 0%,#8b5213 100%)',
+                      border: allChecked ? '2px solid #a07800' : '2px solid #3d1a00',
+                      color: '#3d1a00',
+                      boxShadow: allChecked
+                        ? '2px 2px 0 #1a0800, 0 0 10px rgba(255,200,0,0.5)'
+                        : '2px 2px 0 #1a0800',
+                      transition: 'all 0.15s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = allChecked ? '3px 3px 0 #1a0800, 0 0 14px rgba(255,200,0,0.7)' : '3px 3px 0 #1a0800' }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = allChecked ? '2px 2px 0 #1a0800, 0 0 10px rgba(255,200,0,0.5)' : '2px 2px 0 #1a0800' }}
+                    >{allChecked ? '✨ 完成' : '完成'}</button>
                   </div>
-                  <button onClick={() => handleCompleteStage(currentStageIdx)} style={{
-                    padding: '8px 16px', fontWeight: 700, fontSize: 12, flexShrink: 0,
-                    background: 'linear-gradient(180deg,#d4aa6a 0%,#8b5213 100%)',
-                    border: '2px solid #3d1a00', color: '#3d1a00',
-                    boxShadow: '2px 2px 0 #1a0800', transition: 'all 0.1s',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = '3px 3px 0 #1a0800' }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '2px 2px 0 #1a0800' }}
-                  >完成</button>
+
+                  {/* 查看详情按钮（右下角） */}
+                  {subtasks.length > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                      <button
+                        onClick={() => setExpandedStage(isExpanded ? null : currentStageIdx)}
+                        style={{
+                          padding: '4px 10px', fontSize: 11, fontWeight: 700,
+                          background: isExpanded ? 'linear-gradient(180deg,#7a4a10,#5a3008)' : 'linear-gradient(180deg,#c49450,#8b5213)',
+                          border: '2px solid #3d1a00', color: isExpanded ? '#e8c87a' : '#3d1a00',
+                          boxShadow: '1px 1px 0 #1a0800', transition: 'all 0.1s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
+                        onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+                      >
+                        {isExpanded ? '收起 ▲' : `查看详情 ▼${subtasks.length > 0 ? ` (${doneCount}/${subtasks.length})` : ''}`}
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* 子任务展开区 */}
+                {isExpanded && (
+                  <div style={{
+                    ...W.inset,
+                    padding: '10px 12px',
+                    marginTop: 3,
+                    borderTop: 'none',
+                  }}>
+                    <div style={{ color: '#9a6a30', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>
+                      ── 本周具体步骤 ──
+                    </div>
+                    {subtasks.map((task, i) => {
+                      const done = !!checked[i]
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => toggleSubtask(currentStageIdx, i)}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 8,
+                            marginBottom: i < subtasks.length - 1 ? 8 : 0,
+                            cursor: 'pointer',
+                            padding: '4px 6px',
+                            background: done ? 'rgba(60,120,20,0.15)' : 'transparent',
+                            border: done ? '1px solid rgba(80,160,30,0.3)' : '1px solid transparent',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => { if (!done) e.currentTarget.style.background = 'rgba(200,150,60,0.1)' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = done ? 'rgba(60,120,20,0.15)' : 'transparent' }}
+                        >
+                          {/* 像素复选框 */}
+                          <div style={{
+                            width: 14, height: 14, flexShrink: 0, marginTop: 2,
+                            background: done ? '#3a8a20' : '#2e1400',
+                            border: `2px solid ${done ? '#5aaa30' : '#6b3d10'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 9, color: '#c8ffaa', fontWeight: 900,
+                            transition: 'all 0.15s',
+                          }}>
+                            {done ? '✓' : ''}
+                          </div>
+                          <span style={{
+                            color: done ? '#5a8a40' : '#d4a96a',
+                            fontSize: 12, lineHeight: 1.6,
+                            textDecoration: done ? 'line-through' : 'none',
+                            flex: 1,
+                          }}>
+                            {i + 1}. {task}
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {allChecked && (
+                      <div style={{
+                        marginTop: 10, padding: '6px 10px', textAlign: 'center',
+                        background: 'rgba(255,200,0,0.08)', border: '1px solid #d4a800',
+                        color: '#ffd040', fontSize: 12, fontWeight: 700,
+                      }}>
+                        🎉 全部完成！点击上方「完成」领取奖励
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )
           })()}
